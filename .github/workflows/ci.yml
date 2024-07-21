@@ -20,7 +20,7 @@ jobs:
 
       - name: run 7.disk.clean.sh
         run: |
-          curl https://raw.githubusercontent.com/debian12v23q1/24019-openos365-10024-debian-12-docker-v23q1-build/test/7.disk.clean.sh | bash
+          curl https://raw.githubusercontent.com/brainos365/10007-github-actions-template-runner/test/8.disk.clean.sh | bash
 
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
