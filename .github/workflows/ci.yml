@@ -1,0 +1,70 @@
+name: ci
+
+on:
+  push:
+    branches:
+      # - 'dev'
+      - 'test'
+      - 'prod'
+      - 'prod**'
+  schedule:
+    # https://www.box3.cn/page/crontab.html
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ci
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: run 7.disk.clean.sh
+        run: |
+          curl https://raw.githubusercontent.com/debian12v23q1/24019-openos365-10024-debian-12-docker-v23q1-build/test/7.disk.clean.sh | bash
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: true
+          
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 1024
+          temp-reserve-mb: 1024
+          swap-size-mb: 1024
+          remove-dotnet: 'true'
+          remove-docker-images: 'true'
+          remove-codeql: 'true'
+          remove-haskell: 'true'
+
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.OPENOS365_SSH }} 
+          known_hosts: 'gitlab.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFSMqzJeV9rUzU4kWitGjeR4PWSa29SPqJ1fVkhtj3Hw9xjLVXVYrU9QlYWrOLXBpQ6KWjbjTDTdDkoohFzgbEY='
+      - name: Check Out Repo 
+        uses: actions/checkout@v3
+
+      - name: run 1.ci.caller.sh
+        env:
+          OPENOS365_UP_NAME_01: ${{ secrets.OPENOS365_UP_NAME_01 }}
+          OPENOS365_UP_NAME_02: ${{ secrets.OPENOS365_UP_NAME_02 }}
+          OPENOS365_UP_NAME_03: ${{ secrets.OPENOS365_UP_NAME_03 }}
+          OPENOS365_DOWN_NAME_01: ${{ secrets.OPENOS365_DOWN_NAME_01 }}
+          OPENOS365_DOWN_NAME_02: ${{ secrets.OPENOS365_DOWN_NAME_02 }}
+          OPENOS365_DOWN_NAME_03: ${{ secrets.OPENOS365_DOWN_NAME_03 }}
+        run: |
+          ./1.ci.caller.sh
+          ./6.ci.trigger.sh
